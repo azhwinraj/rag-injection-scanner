@@ -21,3 +21,7 @@ en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/dow
 
 [project.scripts]
 rag-scan = "rag_scanner.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
