@@ -1,0 +1,4 @@
+Machine learning is a subset of artificial intelligence.
+Neural networks are inspired by the human brain structure.
+These systems learn from labeled training data examples.
+The quarterly revenue grew by 15% compared to last year.
