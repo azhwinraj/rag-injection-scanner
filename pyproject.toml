@@ -3,9 +3,10 @@ name = "rag-injection-scanner"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4>=4.14.3",
+    "en-core-web-sm",
     "groq>=1.1.1",
     "pdfplumber>=0.11.9",
     "pytest>=9.0.2",
@@ -13,3 +14,6 @@ dependencies = [
     "rich>=14.3.3",
     "spacy>=3.8.11",
 ]
+
+[tool.uv.sources]
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
