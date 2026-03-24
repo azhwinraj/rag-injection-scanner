@@ -31,30 +31,31 @@ console = Console()
 
 SCANNER_VERSION: str = "0.1.0"
 
-RISK_CLEAN:      str = "CLEAN"
+RISK_CLEAN: str = "CLEAN"
 RISK_SUSPICIOUS: str = "SUSPICIOUS"
-RISK_DANGEROUS:  str = "DANGEROUS"
+RISK_DANGEROUS: str = "DANGEROUS"
 
-EXIT_CLEAN:      int = 0
+EXIT_CLEAN: int = 0
 EXIT_SUSPICIOUS: int = 1
-EXIT_DANGEROUS:  int = 2
+EXIT_DANGEROUS: int = 2
 
 # Rich color mapping per risk level
 RISK_COLORS: dict[str, str] = {
-    RISK_CLEAN:      "green",
+    RISK_CLEAN: "green",
     RISK_SUSPICIOUS: "yellow",
-    RISK_DANGEROUS:  "red",
+    RISK_DANGEROUS: "red",
 }
 
 # Risk level ordering for overall risk calculation
 RISK_ORDER: dict[str, int] = {
-    RISK_CLEAN:      0,
+    RISK_CLEAN: 0,
     RISK_SUSPICIOUS: 1,
-    RISK_DANGEROUS:  2,
+    RISK_DANGEROUS: 2,
 }
 
 
 # ── Summary Builder ───────────────────────────────────────────────────────────
+
 
 def build_summary(classifications: list[dict[str, Any]]) -> dict[str, Any]:
     """
@@ -66,9 +67,13 @@ def build_summary(classifications: list[dict[str, Any]]) -> dict[str, Any]:
     Returns:
         Summary dictionary with counts and overall risk level.
     """
-    clean_count      = sum(1 for r in classifications if r["risk_level"] == RISK_CLEAN)
-    suspicious_count = sum(1 for r in classifications if r["risk_level"] == RISK_SUSPICIOUS)
-    dangerous_count  = sum(1 for r in classifications if r["risk_level"] == RISK_DANGEROUS)
+    clean_count = sum(1 for r in classifications if r["risk_level"] == RISK_CLEAN)
+    suspicious_count = sum(
+        1 for r in classifications if r["risk_level"] == RISK_SUSPICIOUS
+    )
+    dangerous_count = sum(
+        1 for r in classifications if r["risk_level"] == RISK_DANGEROUS
+    )
 
     # Overall risk = maximum risk found across all chunks
     if dangerous_count > 0:
@@ -79,15 +84,16 @@ def build_summary(classifications: list[dict[str, Any]]) -> dict[str, Any]:
         overall_risk = RISK_CLEAN
 
     return {
-        "clean":        clean_count,
-        "suspicious":   suspicious_count,
-        "dangerous":    dangerous_count,
-        "total":        len(classifications),
+        "clean": clean_count,
+        "suspicious": suspicious_count,
+        "dangerous": dangerous_count,
+        "total": len(classifications),
         "overall_risk": overall_risk,
     }
 
 
 # ── Exit Code ─────────────────────────────────────────────────────────────────
+
 
 def get_exit_code(overall_risk: str) -> int:
     """
@@ -100,14 +106,15 @@ def get_exit_code(overall_risk: str) -> int:
         Exit code integer: 0, 1, or 2.
     """
     mapping = {
-        RISK_CLEAN:      EXIT_CLEAN,
+        RISK_CLEAN: EXIT_CLEAN,
         RISK_SUSPICIOUS: EXIT_SUSPICIOUS,
-        RISK_DANGEROUS:  EXIT_DANGEROUS,
+        RISK_DANGEROUS: EXIT_DANGEROUS,
     }
     return mapping.get(overall_risk, EXIT_SUSPICIOUS)
 
 
 # ── Terminal Output ───────────────────────────────────────────────────────────
+
 
 def print_terminal_report(
     source: str,
@@ -122,46 +129,36 @@ def print_terminal_report(
         summary:         Summary dictionary from build_summary().
         classifications: Full list of classification results.
     """
-    overall_risk  = summary["overall_risk"]
+    overall_risk = summary["overall_risk"]
     overall_color = RISK_COLORS[overall_risk]
 
     # ── Header panel ─────────────────────────────────────────────────────────
     console.print()
-    console.print(Panel(
-        f"[bold]RAG Injection Scanner[/bold]\n"
-        f"[dim]Source:[/dim] {source}\n"
-        f"[dim]Scanned:[/dim] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"[dim]Overall Risk:[/dim] [{overall_color}]{overall_risk}[/{overall_color}]",
-        title="[bold cyan]Scan Report[/bold cyan]",
-        box=box.ROUNDED,
-    ))
+    console.print(
+        Panel(
+            f"[bold]RAG Injection Scanner[/bold]\n"
+            f"[dim]Source:[/dim] {source}\n"
+            f"[dim]Scanned:[/dim] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"[dim]Overall Risk:[/dim] [{overall_color}]{overall_risk}[/{overall_color}]",
+            title="[bold cyan]Scan Report[/bold cyan]",
+            box=box.ROUNDED,
+        )
+    )
 
     # ── Summary table ─────────────────────────────────────────────────────────
     summary_table = Table(box=box.SIMPLE, show_header=False)
     summary_table.add_column("Metric", style="dim")
     summary_table.add_column("Value")
 
-    summary_table.add_row("Total chunks",  str(summary["total"]))
-    summary_table.add_row(
-        "Clean",
-        f"[green]{summary['clean']}[/green]"
-    )
-    summary_table.add_row(
-        "Suspicious",
-        f"[yellow]{summary['suspicious']}[/yellow]"
-    )
-    summary_table.add_row(
-        "Dangerous",
-        f"[red]{summary['dangerous']}[/red]"
-    )
+    summary_table.add_row("Total chunks", str(summary["total"]))
+    summary_table.add_row("Clean", f"[green]{summary['clean']}[/green]")
+    summary_table.add_row("Suspicious", f"[yellow]{summary['suspicious']}[/yellow]")
+    summary_table.add_row("Dangerous", f"[red]{summary['dangerous']}[/red]")
 
     console.print(summary_table)
 
     # ── Flagged chunks detail ─────────────────────────────────────────────────
-    flagged = [
-        r for r in classifications
-        if r["risk_level"] != RISK_CLEAN
-    ]
+    flagged = [r for r in classifications if r["risk_level"] != RISK_CLEAN]
 
     if not flagged:
         console.print("[green]✓ No injection payloads detected.[/green]\n")
@@ -170,11 +167,11 @@ def print_terminal_report(
     console.print(f"\n[bold]Flagged Chunks ({len(flagged)}):[/bold]")
 
     detail_table = Table(box=box.SIMPLE)
-    detail_table.add_column("Chunk",  style="dim", width=6)
-    detail_table.add_column("Risk",   width=12)
-    detail_table.add_column("L1",     width=5)
-    detail_table.add_column("L2",     width=8)
-    detail_table.add_column("L3",     width=12)
+    detail_table.add_column("Chunk", style="dim", width=6)
+    detail_table.add_column("Risk", width=12)
+    detail_table.add_column("L1", width=5)
+    detail_table.add_column("L2", width=8)
+    detail_table.add_column("L3", width=12)
     detail_table.add_column("Reason", no_wrap=False)
 
     for r in flagged:
@@ -190,7 +187,7 @@ def print_terminal_report(
             "✓" if r["layer1_flagged"] else "–",
             f"{r['layer2_score']:.3f}",
             l3_display,
-            r["reason"][:120],
+            r["reason"],
         )
 
     console.print(detail_table)
@@ -198,6 +195,7 @@ def print_terminal_report(
 
 
 # ── JSON Report ───────────────────────────────────────────────────────────────
+
 
 def build_json_report(
     source: str,
@@ -217,13 +215,13 @@ def build_json_report(
     """
     return {
         "scan_metadata": {
-            "source":           source,
-            "timestamp":        datetime.now().isoformat(),
-            "scanner_version":  SCANNER_VERSION,
-            "total_chunks":     summary["total"],
+            "source": source,
+            "timestamp": datetime.now().isoformat(),
+            "scanner_version": SCANNER_VERSION,
+            "total_chunks": summary["total"],
         },
         "summary": summary,
-        "chunks":  classifications,
+        "chunks": classifications,
     }
 
 
@@ -254,6 +252,7 @@ def save_json_report(
 
 # ── Full Report Runner ────────────────────────────────────────────────────────
 
+
 def generate_report(
     source: str,
     classifications: list[dict[str, Any]],
@@ -272,9 +271,9 @@ def generate_report(
     Returns:
         Tuple of (json_report dict, exit_code int).
     """
-    summary   = build_summary(classifications)
+    summary = build_summary(classifications)
     exit_code = get_exit_code(summary["overall_risk"])
-    report    = build_json_report(source, summary, classifications)
+    report = build_json_report(source, summary, classifications)
 
     if print_terminal:
         print_terminal_report(source, summary, classifications)
@@ -284,7 +283,9 @@ def generate_report(
 
     logger.info(
         "Report generated | source=%s | overall_risk=%s | exit_code=%d",
-        source, summary["overall_risk"], exit_code,
+        source,
+        summary["overall_risk"],
+        exit_code,
     )
 
     return report, exit_code
