@@ -127,7 +127,7 @@ Layer 1 and Layer 2 handled the rest for free.
 
 ## Quick Start
 ```bash
-git clone https://github.com/YOUR_USERNAME/rag-injection-scanner
+git clone https://github.com/azhwinraj/rag-injection-scanner.git
 cd rag-injection-scanner
 uv sync
 echo "GROQ_API_KEY=your_key_here" >> .env
@@ -145,7 +145,7 @@ Get a free Groq API key at [console.groq.com](https://console.groq.com)
 **Requirements:** Python 3.11+, [uv](https://docs.astral.sh/uv/)
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/rag-injection-scanner
+git clone https://github.com/azhwinraj/rag-injection-scanner.git
 cd rag-injection-scanner
 
 # Install dependencies
@@ -318,7 +318,7 @@ benchmark is on the roadmap.
 
 Contributions are welcome. To get started:
 ```bash
-git clone https://github.com/YOUR_USERNAME/rag-injection-scanner
+git clone https://github.com/azhwinraj/rag-injection-scanner.git
 cd rag-injection-scanner
 uv sync
 uv run pytest tests/ -v  # make sure all 59 tests pass
