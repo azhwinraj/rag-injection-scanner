@@ -29,9 +29,9 @@ logger = logging.getLogger(__name__)
 # ── Constants ────────────────────────────────────────────────────────────────
 
 # Risk level labels
-RISK_CLEAN:      str = "CLEAN"
+RISK_CLEAN: str = "CLEAN"
 RISK_SUSPICIOUS: str = "SUSPICIOUS"
-RISK_DANGEROUS:  str = "DANGEROUS"
+RISK_DANGEROUS: str = "DANGEROUS"
 
 # Minimum Layer 3 confidence to trust a DATA classification
 MIN_L3_CONFIDENCE: float = 0.70
@@ -41,6 +41,7 @@ L2_ESCALATION_THRESHOLD: float = 0.40
 
 
 # ── Core Classifier ───────────────────────────────────────────────────────────
+
 
 def classify_chunk(
     chunk: dict[str, Any],
@@ -72,9 +73,7 @@ def classify_chunk(
     l2_score: float = float(
         layer2_result.get("risk_score", 0.0) if layer2_result else 0.0
     )
-    l2_escalated: bool = bool(
-        layer2_result and layer2_result.get("escalate", False)
-    )
+    l2_escalated: bool = bool(layer2_result and layer2_result.get("escalate", False))
 
     l3_ran: bool = layer3_result is not None
     l3_classification: str = (
@@ -83,9 +82,7 @@ def classify_chunk(
     l3_confidence: float = float(
         layer3_result.get("confidence", 0.0) if l3_ran else 0.0
     )
-    l3_reasoning: str = (
-        layer3_result.get("reasoning", "") if l3_ran else ""
-    )
+    l3_reasoning: str = layer3_result.get("reasoning", "") if l3_ran else ""
 
     # ── Decision logic ────────────────────────────────────────────────────────
     risk_level: str
@@ -109,18 +106,19 @@ def classify_chunk(
             )
 
         elif l3_classification == "DATA" and l3_confidence >= MIN_L3_CONFIDENCE:
-            if l1_flagged:
+            if l1_flagged and l3_confidence < 0.90:
                 risk_level = RISK_SUSPICIOUS
                 reason = (
                     f"Layer 3 classified as DATA (confidence={l3_confidence:.2f}) "
                     f"but Layer 1 flagged {len(l1_patterns)} pattern(s): "
-                    f"{l1_patterns[:3]}. Conflicting signals — review recommended."
+                    f"{l1_patterns[:3]}. Confidence below 0.90 — review recommended."
                 )
             else:
                 risk_level = RISK_CLEAN
                 reason = (
                     f"Layer 3 classified as DATA with confidence "
-                    f"{l3_confidence:.2f}. No conflicting signals."
+                    f"{l3_confidence:.2f}. "
+                    f"{'L1 flag overridden by high-confidence L3 result.' if l1_flagged else 'No conflicting signals.'}"
                 )
 
         else:
@@ -159,24 +157,27 @@ def classify_chunk(
 
     logger.info(
         "Classified | chunk=%d | source=%s | risk=%s",
-        chunk_index, source, risk_level,
+        chunk_index,
+        source,
+        risk_level,
     )
 
     return {
-        "chunk_index":          chunk_index,
-        "source":               source,
-        "risk_level":           risk_level,
-        "reason":               reason,
-        "layer1_flagged":       l1_flagged,
-        "layer1_patterns":      l1_patterns,
-        "layer2_score":         l2_score,
-        "layer3_ran":           l3_ran,
+        "chunk_index": chunk_index,
+        "source": source,
+        "risk_level": risk_level,
+        "reason": reason,
+        "layer1_flagged": l1_flagged,
+        "layer1_patterns": l1_patterns,
+        "layer2_score": l2_score,
+        "layer3_ran": l3_ran,
         "layer3_classification": l3_classification,
-        "layer3_confidence":    l3_confidence,
+        "layer3_confidence": l3_confidence,
     }
 
 
 # ── Batch Classifier ──────────────────────────────────────────────────────────
+
 
 def classify_all_chunks(
     chunks: list[dict[str, Any]],
@@ -198,9 +199,7 @@ def classify_all_chunks(
     """
     # Build a lookup for Layer 3 results by chunk_index
     # Layer 3 only runs on flagged chunks so we can't index by position
-    l3_lookup: dict[int, dict[str, Any]] = {
-        r["chunk_index"]: r for r in layer3_results
-    }
+    l3_lookup: dict[int, dict[str, Any]] = {r["chunk_index"]: r for r in layer3_results}
 
     results: list[dict[str, Any]] = []
 
@@ -214,15 +213,17 @@ def classify_all_chunks(
 
     # Summary logging
     counts = {
-        RISK_CLEAN:      sum(1 for r in results if r["risk_level"] == RISK_CLEAN),
+        RISK_CLEAN: sum(1 for r in results if r["risk_level"] == RISK_CLEAN),
         RISK_SUSPICIOUS: sum(1 for r in results if r["risk_level"] == RISK_SUSPICIOUS),
-        RISK_DANGEROUS:  sum(1 for r in results if r["risk_level"] == RISK_DANGEROUS),
+        RISK_DANGEROUS: sum(1 for r in results if r["risk_level"] == RISK_DANGEROUS),
     }
 
     logger.info(
         "Classification complete | total=%d | clean=%d | suspicious=%d | dangerous=%d",
-        len(results), counts[RISK_CLEAN],
-        counts[RISK_SUSPICIOUS], counts[RISK_DANGEROUS],
+        len(results),
+        counts[RISK_CLEAN],
+        counts[RISK_SUSPICIOUS],
+        counts[RISK_DANGEROUS],
     )
 
     return results
